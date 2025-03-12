@@ -1,0 +1,32 @@
+<Window
+    x:Class="SmartBin.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SmartBin"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="SmartBin">
+
+	<Grid Background="LightBlue">
+		<TextBlock Text="SmartBin" FontSize="40" Foreground="Black"  
+                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0" 
+                   FontStyle="Oblique" TextLineBounds="TrimToBaseline" />
+
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="75">
+			<Button x:Name="myToggle" Click="myToggle_Click" Foreground="Black" Background="LightGreen">Live View</Button>
+		</StackPanel>
+
+		<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="75">
+			<Button x:Name="myStatistics" Click="myStatistics_Click" Foreground="Black" Background="LightGreen">Statistics</Button>
+		</StackPanel>
+
+		<Button Content="Settings" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="75" 
+                Background="LightGreen" Foreground="Black"/>
+
+		<Border x:Name="borderControl" Width="1000" Height="600" Background="Black" 
+                HorizontalAlignment="Center" VerticalAlignment="Center"/>
+
+		<SwapChainPanel/>
+	</Grid>
+</Window>
