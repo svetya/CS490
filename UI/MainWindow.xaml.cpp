@@ -1,4 +1,3 @@
-// MainWindow.xaml.cpp
 #include "pch.h"
 #include "MainWindow.xaml.h"
 #if __has_include("MainWindow.g.cpp")
@@ -8,9 +7,9 @@
 #include <winrt/Windows.Storage.Pickers.h>
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Foundation.h>
-#include <windows.h> // For GetActiveWindow()
-#include <shobjidl_core.h> // For IInitializeWithWindow
-#include <winrt/Microsoft.UI.Dispatching.h> // Needed for DispatcherQueue
+#include <windows.h> //GetActiveWindow()
+#include <shobjidl_core.h> //IInitializeWithWindow
+#include <winrt/Microsoft.UI.Dispatching.h> //DispatcherQueue
 
 using namespace winrt;
 using namespace Microsoft::UI::Xaml;
@@ -45,7 +44,7 @@ namespace winrt::SmartBin::implementation
             myToggle().Content(box_value(L"Live View"));
         }
 
-        UpdateBorderContent(); // Update the border content based on the toggle state
+        UpdateBorderContent();
     }
 
     void MainWindow::UpdateBorderContent()
@@ -68,8 +67,7 @@ namespace winrt::SmartBin::implementation
             text.HorizontalAlignment(HorizontalAlignment::Center);
             panel.Children().Append(text);
 
-            // Grid to perfectly center the button
-            Grid buttonContainer;
+            Grid buttonContainer; //for positioning
             buttonContainer.HorizontalAlignment(HorizontalAlignment::Stretch);
             buttonContainer.VerticalAlignment(VerticalAlignment::Stretch);
 
@@ -103,16 +101,17 @@ namespace winrt::SmartBin::implementation
     {
         FileOpenPicker picker;
 
-        // Set up the file picker for WinUI 3 desktop apps
+        //necesary for file picker//////////////////
         auto hwnd = GetActiveWindow();
         winrt::com_ptr<IInitializeWithWindow> initWindow;
         picker.as(initWindow);
         initWindow->Initialize(hwnd);
+        ///////////////////////////////////////////
 
         picker.SuggestedStartLocation(PickerLocationId::DocumentsLibrary);
         picker.FileTypeFilter().Append(L"*");
 
-        // Run the file picker asynchronously
+        //bring up file picker asynchronously
         auto asyncOp = picker.PickSingleFileAsync();
 
         asyncOp.Completed([this](winrt::Windows::Foundation::IAsyncOperation<StorageFile> const& operation, winrt::Windows::Foundation::AsyncStatus const status)
@@ -124,7 +123,7 @@ namespace winrt::SmartBin::implementation
                     {
                         winrt::hstring filePath = file.Path();
 
-                        // Ensure UI updates happen on the main thread
+                        //update UI display file path
                         winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread().TryEnqueue(
                             [this, filePath]()
                             {
