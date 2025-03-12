@@ -150,27 +150,13 @@ namespace winrt::SmartBin::implementation
         {
             myStatistics().Content(box_value(L"Close Statistics"));
 
-            StackPanel panel;
-            panel.Orientation(Orientation::Vertical);
-            panel.HorizontalAlignment(HorizontalAlignment::Center);
-            panel.VerticalAlignment(VerticalAlignment::Center);
-            //panel.Background(Media::SolidColorBrush(Colors::White()));
-            panel.Width(700);
-            panel.Height(400);
-
-            TextBlock text;
-            text.Text(L"Settings");
-            //text.Foreground(Media::SolidColorBrush(Colors::Black()));
-            //text.Foreground(Media::SolidColorBrush(Colors::Black()));
-            text.HorizontalAlignment(HorizontalAlignment::Center);
-            panel.Children().Append(text);
-
-            borderControl().Child(panel);
         }
         else
         {
             myStatistics().Content(box_value(L"Statistics"));
         }
+        //after each click update drop down panel
+        UpdateStatisticsContent();
     }
     void MainWindow::UpdateStatisticsContent()
     {
