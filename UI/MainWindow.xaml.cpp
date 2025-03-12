@@ -162,13 +162,13 @@ namespace winrt::SmartBin::implementation
     {
         using namespace winrt::Microsoft::UI;
 
-        if (myStatistics().Content().as<winrt::hstring>() == L"Statistics")
+        if (myStatistics().Content().as<winrt::hstring>() == L"Close Statistics")
         {
             StackPanel panel;
             panel.Orientation(Orientation::Vertical);
             panel.HorizontalAlignment(HorizontalAlignment::Center);
             panel.VerticalAlignment(VerticalAlignment::Center);
-            panel.Background(Media::SolidColorBrush(Colors::White()));
+            panel.Background(Media::SolidColorBrush(Colors::LightSlateGray()));
             panel.Width(1000);
             panel.Height(600);
 
@@ -176,7 +176,48 @@ namespace winrt::SmartBin::implementation
             text.Text(L"Statistics");
             text.Foreground(Media::SolidColorBrush(Colors::Black()));
             text.HorizontalAlignment(HorizontalAlignment::Center);
+            text.FontSize(48);
             panel.Children().Append(text);
+
+            TextBlock space;
+            space.Text(L"\n");
+            panel.Children().Append(space);
+
+            TextBlock line1;
+            line1.Text(L"Stat 1: ");
+            line1.Foreground(Media::SolidColorBrush(Colors::Black()));
+            line1.HorizontalAlignment(HorizontalAlignment::Left);
+            line1.FontSize(24);
+            panel.Children().Append(line1);
+
+            TextBlock line2;
+            line2.Text(L"Stat 2: ");
+            line2.Foreground(Media::SolidColorBrush(Colors::Black()));
+            line2.HorizontalAlignment(HorizontalAlignment::Left);
+            line2.FontSize(24);
+            panel.Children().Append(line2);
+
+            TextBlock line3;
+            line3.Text(L"Stat 3: ");
+            line3.Foreground(Media::SolidColorBrush(Colors::Black()));
+            line3.HorizontalAlignment(HorizontalAlignment::Left);
+            line3.FontSize(24);
+            panel.Children().Append(line3);
+
+            TextBlock line4;
+            line4.Text(L"Stat 4: ");
+            line4.Foreground(Media::SolidColorBrush(Colors::Black()));
+            line4.HorizontalAlignment(HorizontalAlignment::Left);
+            line4.FontSize(24);
+            panel.Children().Append(line4);
+
+            //text.Text(L"Stat 2: ");
+            //text.Foreground(Media::SolidColorBrush(Colors::Black()));
+            //text.HorizontalAlignment(HorizontalAlignment::Center);
+            //text.FontSize(24);
+            //panel.Children().Append(text);
+
+            borderControl().Child(panel);
 
             borderControl().Child(panel);
         }
@@ -191,7 +232,6 @@ namespace winrt::SmartBin::implementation
             panel.Height(600);
 
             borderControl().Child(panel);
-
         }
     }
 }
