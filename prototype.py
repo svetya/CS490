@@ -12,6 +12,19 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import cv2
 import sys
 import numpy as np
+from ultralytics import YOLO
+
+# Load the model
+yolo = YOLO('yolov8n.pt')
+
+def getColours(cls_num):
+    base_colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+    color_index = cls_num % len(base_colors)
+    increments = [(1, -2, 1), (-2, 1, -1), (1, -1, 2)]
+    color = [base_colors[color_index][i] + increments[color_index][i] * 
+    (cls_num // len(base_colors)) % 256 for i in range(3)]
+    return tuple(color)
+
 
 
 class CameraThread(QtCore.QThread):
@@ -22,6 +35,7 @@ class CameraThread(QtCore.QThread):
         self.camera_index = camera_index
         self.running = False  # Flag to control the thread
         self.cap = None
+        self.model = YOLO("yolov8n.pt")
 
     def run(self):
         self.cap = cv2.VideoCapture(self.camera_index)
@@ -30,8 +44,11 @@ class CameraThread(QtCore.QThread):
         while self.running:
             ret, frame = self.cap.read()
             if ret:
+
+                results = self.model(frame, verbose=False)[0]
+                annotated_frame = results.plot()
                 # Convert frame from BGR to RGB
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
                 h, w, ch = frame.shape
                 bytes_per_line = ch * w
                 qt_img = QtGui.QImage(frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
