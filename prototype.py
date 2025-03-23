@@ -9,6 +9,7 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QFileDialog
 import cv2
 import sys
 import numpy as np
@@ -180,6 +181,14 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.camera_thread = None  # Thread for the camera
+        self.UploadButton.clicked.connect(self.openFileDialog)
+
+    def openFileDialog(self):
+        options = QFileDialog.Options()
+        file, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)", options=options)
+        if file:
+            print(f"File name: {file}")
+            self.ImageFeedLabel.setText(f"Selected file: {file}")
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
