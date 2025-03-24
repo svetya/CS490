@@ -1,4 +1,3 @@
-
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 import cv2
@@ -256,6 +255,7 @@ class Ui_MainWindow(object):
         self.UploadButton = QtWidgets.QPushButton(self.centralwidget)
         self.UploadButton.setObjectName("UploadButton")
         self.UploadButton.clicked.connect(self.openFileDialog)
+        
         self.horizontalLayout.addWidget(self.UploadButton)
         self.gridLayout.addLayout(self.horizontalLayout, 2, 2, 1, 1)
         spacerItem1 = QtWidgets.QSpacerItem(128, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -360,12 +360,18 @@ class Ui_MainWindow(object):
                 self.start_camera()
     
     def openFileDialog(self):
-        self.stop_camera
+        """Open a file dialog to select an image and display it."""
         options = QFileDialog.Options()
-        file, _ = QFileDialog.getOpenFileName(None, "Open File", "", "All Files (*);;Text Files (*.txt)", options=options)
-        if file:
-            print(f"File name: {file}")
-            self.ImageFeedLabel.setText(f"Selected file: {file}")
+        file_filter = "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
+    
+        file_path, _ = QFileDialog.getOpenFileName(
+            None, "Select an Image", "", file_filter, options=options
+        )
+
+        if file_path:  # If a file is selected
+            self.displayImage(file_path)
+
+
 
 
     def start_camera(self):
@@ -389,6 +395,12 @@ class Ui_MainWindow(object):
     def update_image(self, qt_img):
         """Update QLabel with new frame"""
         self.ImageFeedLabel.setPixmap(QtGui.QPixmap.fromImage(qt_img))
+
+    def displayImage(self, file_path):
+        """Display the selected image in the QLabel."""
+        pixmap = QtGui.QPixmap(file_path)
+        self.ImageFeedLabel.setPixmap(pixmap)
+        self.ImageFeedLabel.setScaledContents(True)  # Scale image to fit QLabel
 
 
 
