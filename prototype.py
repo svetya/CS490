@@ -147,7 +147,8 @@ class CameraThread(QtCore.QThread):
             ret, frame = self.cap.read()
             if ret:
                 # Pass confidence threshold and classes to the model
-                results = self.model(frame, conf=self.confidence, classes=self.classes, verbose=False)[0]
+                results = self.model(frame, conf=self.confidence, classes=self.classes, verbose=False, augment=True)[0]
+
                 annotated_frame = results.plot()
                 # Convert frame from BGR to RGB
                 frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
