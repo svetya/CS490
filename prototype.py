@@ -4,6 +4,7 @@ import cv2
 import sys
 import numpy as np
 from ultralytics import YOLO
+import os
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QCheckBox, QSpinBox, QPushButton, QHBoxLayout, QDialog, QFormLayout
 
@@ -147,8 +148,7 @@ class CameraThread(QtCore.QThread):
             ret, frame = self.cap.read()
             if ret:
                 # Pass confidence threshold and classes to the model
-                results = self.model(frame, conf=self.confidence, classes=self.classes, verbose=False, augment=True)[0]
-
+                results = self.model(frame, conf=self.confidence, classes=self.classes, verbose=False)[0]
                 annotated_frame = results.plot()
                 # Convert frame from BGR to RGB
                 frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
@@ -360,33 +360,57 @@ class Ui_MainWindow(object):
                 self.stop_camera()
                 self.start_camera()
     
-    def openFileDialog(self):
-        options = QtWidgets.QFileDialog.Options()
-        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+    def displayVideo(self, file_path, model_path='yolov8n.pt'):
 
-        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
-            None,
-            "Open Image File", "",
-            "Image Files (*.png *.jpg *.jpeg *.bmp)", options=options
-        )
-
-        if file_name:
-            image = QtGui.QPixmap(file_name)
-            
-            if image.isNull():
+        change_pixmap_signal = QtCore.pyqtSignal(QtGui.QImage)
+        model = YOLO(model_path)
+        cap = cv2.VideoCapture(file_path)
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            results = model(frame)
+            annotated_frame = results[0].plot()
+            h, w, ch = annotated_frame.shape
+            bytes_per_line = ch * w
+            q_image = QtGui.QImage(annotated_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+            pixmap = QtGui.QPixmap(q_image)
+            if pixmap.isNull():
                 QtWidgets.QMessageBox.critical(self, "Image Load Error", "Could not load image!")
                 return
+            pixmap = pixmap.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
+            self.ImageFeedLabel.setPixmap(pixmap)
+            self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
+            change_pixmap_signal.emit(pixmap)
 
-            image = image.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
+    def openFileDialog(self, model_path='yolov8n.pt'):
+        """Open a file dialog to select an image and display it."""
+        self.stop_camera()
+        options = QFileDialog.Options()
+        file_filter = "Images (*.png *.jpg *.jpeg *.bmp *.gif);;Videos (*.mp4 *.avi *.mov *.mkv)"
+    
+        file_path, _ = QFileDialog.getOpenFileName(
+            None, "Open File", "", file_filter, options=options
+        )
 
-            self.ImageFeedLabel.setPixmap(image)
-            self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter) 
+        if self.isVideo(file_path):  # If a file is selected
+            self.displayVideo(file_path)
+        else:
+            self.displayImage(file_path)
 
+
+    def isVideo(self, file_path):
+        image_exts = {'.png', '.jpg', '.jpeg', '.bmp', '.gif'}
+        video_exts = {'.mp4', '.avi', '.mov', '.mkv'}
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext in video_exts:
+            return True
+        elif ext in image_exts:
+            return False
 
 
     def start_camera(self):
         """Start the camera thread with current settings and update UI"""
-
         if self.camera_thread is None or not self.camera_thread.isRunning():
             self.camera_thread = CameraThread(
                 camera_index=self.settings['camera_index'],
@@ -407,13 +431,27 @@ class Ui_MainWindow(object):
         """Update QLabel with new frame"""
         self.ImageFeedLabel.setPixmap(QtGui.QPixmap.fromImage(qt_img))
 
-    def displayImage(self, file_path):
+    def displayImage(self, file_path, model_path="yolov8n.pt"):
         """Display the selected image in the QLabel."""
-        pixmap = QtGui.QPixmap(file_path)
+        model = YOLO(model_path)
+        results = model(file_path)
+        annotatedFrame = results[0].plot()
+        h, w, ch = annotatedFrame.shape
+        bytes_per_line = ch * w
+        q_image = QtGui.QImage(annotatedFrame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        pixmap = QtGui.QPixmap(q_image)
+        if pixmap.isNull():
+            QtWidgets.QMessageBox.critical(self, "Image Load Error", "Could not load image!")
+            return
+        pixmap = pixmap.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
         self.ImageFeedLabel.setPixmap(pixmap)
-        self.ImageFeedLabel.setScaledContents(True)  # Scale image to fit QLabel
-
-
+        self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
+        
+    def convertFrametoQPixmap(self, frame):
+        h, w, ch = frame.shape
+        bytes_per_line = ch * w 
+        q_image = QtGui.QPixmap(frame.data, w,h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        return
 
 if __name__ == "__main__": 
     import sys
