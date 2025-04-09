@@ -148,7 +148,7 @@ class CameraThread(QtCore.QThread):
             if ret:
                 # Pass confidence threshold and classes to the model
                 results = self.model(frame, conf=self.confidence, classes=self.classes, verbose=False, augment=True)[0]
-
+                
                 annotated_frame = results.plot()
                 # Convert frame from BGR to RGB
                 frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
@@ -361,17 +361,32 @@ class Ui_MainWindow(object):
                 self.start_camera()
     
     def openFileDialog(self):
-        """Open a file dialog to select an image and display it."""
-        options = QFileDialog.Options()
-        file_filter = "Images (*.png *.jpg *.jpeg *.bmp *.gif)"
-    
-        file_path, _ = QFileDialog.getOpenFileName(
-            None, "Select an Image", "", file_filter, options=options
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+
+        file_name, _ = QtWidgets.QFileDialog.getOpenFileName(
+            None,
+            "Open Image File", "",
+            "Image Files (*.png *.jpg *.jpeg *.bmp)", options=options
         )
 
-        if file_path:  # If a file is selected
-            self.displayImage(file_path)
+        if file_name:
+            # Load the image
+            image = QtGui.QPixmap(file_name)
+            
+            if image.isNull():
+                QtWidgets.QMessageBox.critical(self, "Image Load Error", "Could not load image!")
+                return
 
+            # Resize the image to a fixed size (e.g., 640x480)
+            image = image.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
+
+            # Set the resized image to the label
+            self.ImageFeedLabel.setPixmap(image)
+            self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)  # Optional: to center the image
+
+            # Save the resized image if needed
+            self.uploaded_image = image
 
 
 
