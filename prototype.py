@@ -235,11 +235,11 @@ class Ui_MainWindow(object):
         self.SettingsButton = QtWidgets.QPushButton(self.centralwidget)
         self.SettingsButton.setObjectName("SettingsButton")
         self.SettingsButton.clicked.connect(self.show_settings_dialog)  # Connect settings button
-     
         self.gridLayout.addWidget(self.SettingsButton, 0, 0, 1, 1)
-        self.DebugButton = QtWidgets.QPushButton(self.centralwidget)
-        self.DebugButton.setObjectName("DebugButton")
-        self.gridLayout.addWidget(self.DebugButton, 0, 4, 1, 1)
+        self.ScanButton = QtWidgets.QPushButton(self.centralwidget)
+        self.ScanButton.setObjectName("ScanButton")
+        self.ScanButton.clicked.connect(self.scan_dialog)  # Connect scanning button
+        self.gridLayout.addWidget(self.ScanButton, 0, 4, 1, 1)
         self.ImageFeedLabel = QtWidgets.QLabel(self.centralwidget)
         self.ImageFeedLabel.setObjectName("ImageFeedLabel")
         self.gridLayout.addWidget(self.ImageFeedLabel, 1, 1, 1, 3)
@@ -296,12 +296,14 @@ class Ui_MainWindow(object):
             'confidence': 0.5,
             'classes': None
         }
+        self.last_uploaded_file = None
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.SettingsButton.setText(_translate("MainWindow", "Settings"))
-        self.DebugButton.setText(_translate("MainWindow", "Debug"))
+        self.ScanButton.setText(_translate("MainWindow", "Scan"))
         self.ImageFeedLabel.setText(_translate("MainWindow", "TextLabel"))
         self.LiveFeedButton.setText(_translate("MainWindow", "Live Feed"))
         self.UploadButton.setText(_translate("MainWindow", "Upload"))
@@ -393,7 +395,9 @@ class Ui_MainWindow(object):
             None, "Open File", "", file_filter, options=options
         )
 
-        if self.isVideo(file_path):  # If a file is selected
+        self.last_uploaded_file = file_path  # Save last uploaded file path
+
+        if self.isVideo(file_path):
             self.displayVideo(file_path)
         else:
             self.displayImage(file_path)
@@ -452,6 +456,35 @@ class Ui_MainWindow(object):
         bytes_per_line = ch * w 
         q_image = QtGui.QPixmap(frame.data, w,h, bytes_per_line, QtGui.QImage.Format_RGB888)
         return
+    def scan_dialog(self):
+        """Handle scan button click event."""
+        if not hasattr(self, 'last_uploaded_file') or self.last_uploaded_file is None:
+            QtWidgets.QMessageBox.warning(self.centralwidget, "No File", "Please upload an image or video first.")
+            return
+
+        #load model
+        model = YOLO(self.settings['model_path'])
+        file_path = self.last_uploaded_file  # Use the last uploaded file path
+
+        #run inference w/ model
+        results = model(file_path)
+
+        #grab ids/scores
+        boxes = results[0].boxes  
+        confidences = boxes.conf  
+        class_ids = boxes.cls  
+
+        # get class names that allign with id
+        object_names = [model.names[int(class_id)] for class_id in class_ids]
+
+        #display
+        result_text = "Detected objects:\n"
+        for name, confidence in zip(object_names, confidences):
+            result_text += f"{name}: {confidence:.2f}\n"
+
+        
+        QtWidgets.QMessageBox.information(self.centralwidget, "Detection Results", result_text)
+
 
 if __name__ == "__main__": 
     import sys
