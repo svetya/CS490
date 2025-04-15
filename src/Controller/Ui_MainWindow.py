@@ -5,6 +5,7 @@ from ultralytics import YOLO
 import os
 from View.CameraThread import CameraThread
 from Controller.SettingsDialog import SettingsDialog
+import uuid
 
 
 class Ui_MainWindow(object):
@@ -140,6 +141,7 @@ class Ui_MainWindow(object):
             'classes': None
         }
         self.last_uploaded_file = None
+        self.current_frame = None
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -215,6 +217,7 @@ class Ui_MainWindow(object):
             ret, frame = cap.read()
             if not ret:
                 break
+            self.current_frame = frame
             results = model(frame)
             annotated_frame = results[0].plot()
             h, w, ch = annotated_frame.shape
@@ -302,36 +305,62 @@ class Ui_MainWindow(object):
         q_image = QtGui.QPixmap(frame.data, w,h, bytes_per_line, QtGui.QImage.Format_RGB888)
         return
     def scan_dialog(self):
-        """Handle scan button click event."""
+        """Handle scan button click event (for image or current video frame)."""
 
-        if not hasattr(self, 'last_uploaded_file') or self.last_uploaded_file is None:
-            QtWidgets.QMessageBox.warning(self.centralwidget, "No File", "Please upload an image or video first.")
-            return
-        
-        #check if is video or file image
-        #if video screen shot and store screen shot into last_uploaded_file 
-        #also display the screenshot as if the user opened the image file
-        #then continue
-
-        #load model
+        # Load the model
         model = YOLO(self.settings['model_path'])
-        file_path = self.last_uploaded_file 
 
-        #run inference w/ model
+        # Determine source for detection
+        if hasattr(self, 'last_uploaded_file') and self.last_uploaded_file is not None:
+            file_path = self.last_uploaded_file
+
+            # If it's a video, use current frame
+            if file_path.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
+                if hasattr(self, 'current_frame') and self.current_frame is not None:
+                    frame = self.current_frame.copy()
+                    temp_name = f"screenshot_{uuid.uuid4().hex}.jpg"
+                    cv2.imwrite(temp_name, frame)
+                    file_path = temp_name
+                else:
+                    QtWidgets.QMessageBox.warning(self.centralwidget, "No Frame", "No video frame available.")
+                    return
+        else:
+            # If nothing uploaded, fall back to live camera frame
+            if hasattr(self, 'current_frame') and self.current_frame is not None:
+                frame = self.current_frame.copy()
+                temp_name = f"screenshot_{uuid.uuid4().hex}.jpg"
+                cv2.imwrite(temp_name, frame)
+                file_path = temp_name
+            else:
+                QtWidgets.QMessageBox.warning(self.centralwidget, "No File", "Please upload a file or use live feed.")
+                return
+
+        # Run inference
         results = model(file_path)
-
-        #grab ids/scores
-        boxes = results[0].boxes  
-        confidences = boxes.conf  
-        class_ids = boxes.cls  
-
-        # get class names that allign with id
+        boxes = results[0].boxes
+        confidences = boxes.conf
+        class_ids = boxes.cls
         object_names = [model.names[int(class_id)] for class_id in class_ids]
 
-        #display
+        # Display detection results
         result_text = "Detected objects:\n"
-        for name, confidence in zip(object_names, confidences):
-            result_text += f"{name}: {confidence:.2f}\n"
+        if len(object_names) == 0:
+            result_text += "No objects detected."
+        else:
+            for name, confidence in zip(object_names, confidences):
+                result_text += f"{name}: {confidence:.2f}\n"
 
-        
         QtWidgets.QMessageBox.information(self.centralwidget, "Detection Results", result_text)
+
+        # Show annotated image on the QLabel
+        annotated = results[0].plot()
+        h, w, ch = annotated.shape
+        bytes_per_line = ch * w
+        q_image = QtGui.QImage(annotated.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        pixmap = QtGui.QPixmap(q_image).scaled(640, 480, QtCore.Qt.KeepAspectRatio)
+        self.ImageFeedLabel.setPixmap(pixmap)
+        self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
+
+        # Clean up temporary file if created
+        if 'temp_name' in locals() and os.path.exists(temp_name):
+            os.remove(temp_name)
