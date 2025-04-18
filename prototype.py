@@ -1,16 +1,19 @@
+import sys
+import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 import cv2
-import sys
 import numpy as np
 from ultralytics import YOLO
 import uuid
-import os
+import requests
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QCheckBox, QSpinBox, QPushButton, QHBoxLayout, QDialog, QFormLayout
 
 # Load the model
 yolo = YOLO('yolov8n.pt')
+# Bootstrap Local API
+base_url = "http://localhost:5000/wastemanagementapi"
 
 def getColours(cls_num):
     base_colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
@@ -19,6 +22,16 @@ def getColours(cls_num):
     color = [base_colors[color_index][i] + increments[color_index][i] * 
     (cls_num // len(base_colors)) % 256 for i in range(3)]
     return tuple(color)
+
+#get all categories
+def get_categories():
+    response = requests.get(f"{base_url}/categories")
+    return response.json()
+
+#get tips for a specific category
+def get_tips_for_category(category_id):
+    response = requests.get(f"{base_url}/categories/{category_id}/tips")
+    return response.json()
 
 
 class SettingsDialog(QtWidgets.QDialog):
@@ -373,6 +386,7 @@ class Ui_MainWindow(object):
             ret, frame = cap.read()
             if not ret:
                 break
+            #for the scan of current frame feature
             self.current_frame = frame
             results = model(frame)
             annotated_frame = results[0].plot()
@@ -392,8 +406,8 @@ class Ui_MainWindow(object):
         """Open a file dialog to select an image and display it."""
         self.stop_camera()
         options = QFileDialog.Options()
-        file_filter = "Images (*.png *.jpg *.jpeg *.bmp *.gif);;Videos (*.mp4 *.avi *.mov *.mkv)"
-    
+        #file_filter = "Images (*.png *.jpg *.jpeg *.bmp *.gif);;Videos (*.mp4 *.avi *.mov *.mkv)"
+        file_filter = "Files (*.png *.jpg *.jpeg *.bmp *.gif *.mp4 *.avi *.mov *.mkv)"
         file_path, _ = QFileDialog.getOpenFileName(
             None, "Open File", "", file_filter, options=options
         )
@@ -414,7 +428,6 @@ class Ui_MainWindow(object):
             return True
         elif ext in image_exts:
             return False
-
 
     def start_camera(self):
         """Start the camera thread with current settings and update UI"""
@@ -443,6 +456,7 @@ class Ui_MainWindow(object):
         model = YOLO(model_path)
         results = model(file_path)
         annotatedFrame = results[0].plot()
+        annotatedFrame = cv2.cvtColor(annotatedFrame, cv2.COLOR_BGR2RGB)
         h, w, ch = annotatedFrame.shape
         bytes_per_line = ch * w
         q_image = QtGui.QImage(annotatedFrame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
@@ -459,66 +473,69 @@ class Ui_MainWindow(object):
         bytes_per_line = ch * w 
         q_image = QtGui.QPixmap(frame.data, w,h, bytes_per_line, QtGui.QImage.Format_RGB888)
         return
+    
     def scan_dialog(self):
-        """Handle scan button click event (for image or current video frame)."""
+        """Handle scan button click event."""
+        if not hasattr(self, 'last_uploaded_file') or self.last_uploaded_file is None:
+            QtWidgets.QMessageBox.warning(self.centralwidget, "No File", "Please upload an image or video first.")
+            return
 
-        # Load the model
+        #mapping for categories 
+        label_to_category_id = {
+            "vase": 1,  
+            "bottle": 2,
+            "battery": 2,         # Hazardous Materials
+            "banana peel": 3,     # Organic Waste
+            "laptop": 4,          # Electronic Waste
+            "syringe": 5,         # Medical Waste
+            "sludge": 6           # Sludge
+            
+        }
+
+        #model
         model = YOLO(self.settings['model_path'])
+        file_path = self.last_uploaded_file  #use last uploaded file path
 
-        # Determine source for detection
-        if hasattr(self, 'last_uploaded_file') and self.last_uploaded_file is not None:
-            file_path = self.last_uploaded_file
-
-            # If it's a video, use current frame
-            if file_path.lower().endswith(('.mp4', '.avi', '.mov', '.mkv')):
-                if hasattr(self, 'current_frame') and self.current_frame is not None:
-                    frame = self.current_frame.copy()
-                    temp_name = f"screenshot_{uuid.uuid4().hex}.jpg"
-                    cv2.imwrite(temp_name, frame)
-                    file_path = temp_name
-                else:
-                    QtWidgets.QMessageBox.warning(self.centralwidget, "No Frame", "No video frame available.")
-                    return
-        else:
-            # If nothing uploaded, fall back to live camera frame
-            if hasattr(self, 'current_frame') and self.current_frame is not None:
-                frame = self.current_frame.copy()
-                temp_name = f"screenshot_{uuid.uuid4().hex}.jpg"
-                cv2.imwrite(temp_name, frame)
-                file_path = temp_name
-            else:
-                QtWidgets.QMessageBox.warning(self.centralwidget, "No File", "Please upload a file or use live feed.")
-                return
-
-        # Run inference
+        #inference with the model
         results = model(file_path)
-        boxes = results[0].boxes
-        confidences = boxes.conf
-        class_ids = boxes.cls
+
+        #get ids/scores
+        boxes = results[0].boxes  
+        confidences = boxes.conf  
+        class_ids = boxes.cls  
+
+        #hold class names that align with ids
         object_names = [model.names[int(class_id)] for class_id in class_ids]
 
-        # Display detection results
+        #gather result text for detected objects
         result_text = "Detected objects:\n"
-        if len(object_names) == 0:
-            result_text += "No objects detected."
+        category_ids = []  #store categories detected
+
+        for name, confidence in zip(object_names, confidences):
+            result_text += f"{name}: {confidence:.2f}\n"
+            
+            #check object matches category in label_to_category_id mapping
+            detected_label = name.lower()
+            category_id = label_to_category_id.get(detected_label)
+            
+            if category_id:
+                category_ids.append(category_id)
+        
+        #for detected objects colect tips for category
+        if category_ids:
+            result_text += "\nTips:\n"
+            for category_id in set(category_ids):  # Avoid repeating categories
+                tips = get_tips_for_category(category_id)
+                if tips:
+                    for tip in tips:
+                        result_text += f"  📝 {tip['title']}: {tip['content']}\n"
+                else:
+                    result_text += f"  No tips available for category {category_id}.\n"
         else:
-            for name, confidence in zip(object_names, confidences):
-                result_text += f"{name}: {confidence:.2f}\n"
+            result_text += "\nNo relevant categories detected for tips."
 
+        #display the result in box on UI
         QtWidgets.QMessageBox.information(self.centralwidget, "Detection Results", result_text)
-
-        # Show annotated image on the QLabel
-        annotated = results[0].plot()
-        h, w, ch = annotated.shape
-        bytes_per_line = ch * w
-        q_image = QtGui.QImage(annotated.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
-        pixmap = QtGui.QPixmap(q_image).scaled(640, 480, QtCore.Qt.KeepAspectRatio)
-        self.ImageFeedLabel.setPixmap(pixmap)
-        self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
-
-        # Clean up temporary file if created
-        if 'temp_name' in locals() and os.path.exists(temp_name):
-            os.remove(temp_name)
 
 
 if __name__ == "__main__": 
