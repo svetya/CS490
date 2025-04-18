@@ -2,6 +2,7 @@ import sys
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtCore import Qt, QThread, pyqtSignal
 import cv2
 import numpy as np
 from ultralytics import YOLO
@@ -180,6 +181,45 @@ class CameraThread(QtCore.QThread):
 
 
 class Ui_MainWindow(object):
+    #class for video thread
+    class VideoThread(QThread):
+        change_pixmap_signal = pyqtSignal(QtGui.QImage)
+
+        def __init__(self, file_path, model_path='yolov8n.pt'):
+            super().__init__()
+            self.file_path = file_path
+            self.model_path = model_path
+            #self.run_flag
+            self._run_flag = True
+
+        def run(self):
+            model = YOLO(self.model_path)
+            cap = cv2.VideoCapture(self.file_path)
+
+            while self._run_flag and cap.isOpened():
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                results = model(frame)
+                annotated_frame = results[0].plot()
+                annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
+
+                h, w, ch = annotated_frame.shape
+                bytes_per_line = ch * w
+                q_image = QtGui.QImage(annotated_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+
+                #send signal here
+                self.change_pixmap_signal.emit(q_image)
+
+                self.msleep(30)  #30fps
+
+            cap.release()
+
+        def stop(self):
+            self._run_flag = False
+            self.wait()
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -378,29 +418,19 @@ class Ui_MainWindow(object):
                 self.start_camera()
     
     def displayVideo(self, file_path, model_path='yolov8n.pt'):
+        self.stop_camera()  #stop camera just in case
+        #stop other from playing
+        if hasattr(self, 'video_thread') and self.video_thread.isRunning():
+            self.video_thread.stop()
+        #use video thread
+        self.video_thread = self.VideoThread(file_path, model_path)
+        self.video_thread.change_pixmap_signal.connect(self.update_image)
+        self.video_thread.start()
 
-        change_pixmap_signal = QtCore.pyqtSignal(QtGui.QImage)
-        model = YOLO(model_path)
-        cap = cv2.VideoCapture(file_path)
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
-            #for the scan of current frame feature
-            self.current_frame = frame
-            results = model(frame)
-            annotated_frame = results[0].plot()
-            h, w, ch = annotated_frame.shape
-            bytes_per_line = ch * w
-            q_image = QtGui.QImage(annotated_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
-            pixmap = QtGui.QPixmap(q_image)
-            if pixmap.isNull():
-                QtWidgets.QMessageBox.critical(self, "Image Load Error", "Could not load image!")
-                return
-            pixmap = pixmap.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
-            self.ImageFeedLabel.setPixmap(pixmap)
-            self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
-            change_pixmap_signal.emit(pixmap)
+    def update_image(self, qt_img):
+        """Update QLabel with new frame"""
+        pixmap = QtGui.QPixmap.fromImage(qt_img)  #convert
+        self.ImageFeedLabel.setPixmap(pixmap)
 
     def openFileDialog(self, model_path='yolov8n.pt'):
         """Open a file dialog to select an image and display it."""
@@ -418,6 +448,10 @@ class Ui_MainWindow(object):
             self.displayVideo(file_path)
         else:
             self.displayImage(file_path)
+
+        #if not file_path:
+        #    QtWidgets.QMessageBox.warning(self.centralwidget, "No File Selected", "No file was selected.")
+        #    return
 
 
     def isVideo(self, file_path):
@@ -447,9 +481,9 @@ class Ui_MainWindow(object):
             self.camera_thread.stop()
             self.camera_thread = None
 
-    def update_image(self, qt_img):
-        """Update QLabel with new frame"""
-        self.ImageFeedLabel.setPixmap(QtGui.QPixmap.fromImage(qt_img))
+    #def update_image(self, qt_img):
+    #    """Update QLabel with new frame"""
+    #    self.ImageFeedLabel.setPixmap(QtGui.QPixmap.fromImage(qt_img))
 
     def displayImage(self, file_path, model_path="yolov8n.pt"):
         """Display the selected image in the QLabel."""
@@ -482,7 +516,7 @@ class Ui_MainWindow(object):
 
         #mapping for categories 
         label_to_category_id = {
-            "vase": 1,  
+            "vase": 7,  
             "bottle": 2,
             "battery": 2,         # Hazardous Materials
             "banana peel": 3,     # Organic Waste
