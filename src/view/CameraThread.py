@@ -22,7 +22,7 @@ class CameraThread(QtCore.QThread):
         while self.running:
             ret, frame = self.cap.read()
             if ret:
-                frame = self.model.detect(frame, self.confidence)
+                frame = self.model.detect(frame, self.confidence, self.classes)
                 h, w, ch = frame.shape
                 bytes_per_line = ch * w
                 qt_img = QtGui.QImage(frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
