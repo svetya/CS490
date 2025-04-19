@@ -49,6 +49,26 @@ def get_tips_for_category(category_id):
         print(f"Failed to decode JSON: {e}")
         return []
     
+#get guidelines for a specific category
+def get_guidelines_for_category(category_id):
+    url = f"{base_url}/categories/{category_id}/guidelines"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  #HTTPError for bad responses (4xx, 5xx)
+
+        #if the response is empty before attempting to parse it as JSON
+        if not response.text.strip():  #the response body is empty
+            print(f"Empty response from API for category {category_id}.")
+            return []
+
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"API request failed: {e}")
+        return []
+    except requests.exceptions.JSONDecodeError as e:
+        print(f"Failed to decode JSON: {e}")
+        return []
+    
 
 
 class SettingsDialog(QtWidgets.QDialog):
@@ -572,6 +592,7 @@ class Ui_MainWindow(object):
                 category_ids.append(category_id)
 
         #for detected objects, collect tips for category
+        #also collect guidelines
         if category_ids:
             result_text += "\nTips:\n"
             for category_id in set(category_ids):  #avoid repeating categories
@@ -583,8 +604,18 @@ class Ui_MainWindow(object):
                         result_text += f"  📝 {tip['title']}: {tip['content']}\n"
                 else:
                     result_text += f"  No tips available for category {category_id}.\n"
+            result_text += "\nGuidelines:\n"
+            for category_id in set(category_ids):  #avoid repeating categories
+                guidelines = get_guidelines_for_category(category_id)
+                print(f"Guidelines for category {category_id}: {guidelines}")  #log the response for debugging
+                
+                if guidelines:
+                    for guideline in guidelines:
+                        result_text += f"  📝 {guideline['title']}: {guideline['instructions']}\n"
+                else:
+                    result_text += f"  No guideliness available for category {category_id}.\n"
         else:
-            result_text += "\nNo relevant categories detected for tips."
+            result_text += "\nNo relevant categories detected for guidelines."
 
         #display the result in box on UI
         QtWidgets.QMessageBox.information(self.centralwidget, "Detection Results", result_text)
