@@ -72,7 +72,7 @@ class SettingsDialog(QtWidgets.QDialog):
         # Model selection
         self.model_label = QtWidgets.QLabel("YOLO Model:")
         self.model_combo = QtWidgets.QComboBox()
-        self.model_combo.addItems(["yolov8n.pt", "newbest.pt", "yolov5nu.pt"])
+        self.model_combo.addItems(["CurtisNet.pt", "yolov8n.pt", "yolov5nu.pt"])
         self.form_layout.addRow(self.model_label, self.model_combo)
         
         # Classes to detect
@@ -80,7 +80,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.classes_layout = QtWidgets.QVBoxLayout()
         
         # Add some common recyclable items as checkboxes
-        common_classes = ["Plastic", "Paper", "Glass", "Metal", "Cardboard", "Organic"]
+        common_classes = ["Plastic", "Paper", "Glass", "Metal", "Cardboard"]
         self.class_checkboxes = {}
         
         for cls in common_classes:

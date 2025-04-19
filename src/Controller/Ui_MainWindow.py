@@ -136,7 +136,7 @@ class Ui_MainWindow(object):
         # Default settings
         self.settings = {
             'camera_index': 0,
-            'model_path': 'AI_Models\\yolov8n.pt',
+            'model_path': 'AI_Models\\CurtisNet.pt',
             'confidence': 0.5,
             'classes': None
         }
@@ -147,7 +147,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.SettingsButton.setText(_translate("MainWindow", "Settings"))
-        self.DebugButton.setText(_translate("MainWindow", "Scan"))
+        self.ScanButton.setText(_translate("MainWindow", "Scan"))
         self.ImageFeedLabel.setText(_translate("MainWindow", "TextLabel"))
         self.LiveFeedButton.setText(_translate("MainWindow", "Live Feed"))
         self.UploadButton.setText(_translate("MainWindow", "Upload"))
@@ -179,21 +179,32 @@ class Ui_MainWindow(object):
             # Get class indices based on COCO dataset for the selected checkboxes
             # This is a simplified mapping - you may need to adjust based on your model's classes
             class_mapping = {
-                "Plastic": 76,  # 'bottle'
-                "Paper": 77,    # 'cup'
-                "Glass": 44,    # 'bottle'
-                "Metal": 65,    # 'can'
-                "Cardboard": 78, # 'box'
-                "Organic": 52    # 'banana'
+                "Plastic": [4,5,7,21,24, 27, 29, 35, 36, 37, 38, 39, 44, 47, 48, 49, 55],  # 'bottle'
+                "Paper": [20,30,31,32,33,34,40,56,59],    # 'cup'
+                "Glass": [6,9,23,26],    # 'bottle'
+                "Metal": [0,1,2,8,10,11,12,18,28,50,52],    # 'can'
+                "Cardboard": [13, 14, 15, 16, 17, 18, 19,45,] # 'box'
+                # "Organic": 52    # 'banana'
             }
+            
+            # for cls_name, checkbox in dialog.class_checkboxes.items():
+            #     if checkbox.isChecked() and cls_name in class_mapping:
+            #         class_indices.append(class_mapping[cls_name])
+            
+            # # Set classes to None if all are selected
+            # classes = None if len(class_indices) == len(dialog.class_checkboxes) else class_indices
             
             for cls_name, checkbox in dialog.class_checkboxes.items():
                 if checkbox.isChecked() and cls_name in class_mapping:
-                    class_indices.append(class_mapping[cls_name])
-            
-            # Set classes to None if all are selected
+                    indices = class_mapping[cls_name]
+                    if isinstance(indices, list):
+                        class_indices.extend(indices)  # Add all class IDs
+                    else:
+                        class_indices.append(indices)  # Add single class ID
+
+            # Set classes to None if all are selected (i.e., detect everything)
             classes = None if len(class_indices) == len(dialog.class_checkboxes) else class_indices
-            
+
             # Update settings
             self.settings = {
                 'camera_index': camera_index,
