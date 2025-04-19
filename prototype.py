@@ -31,8 +31,24 @@ def get_categories():
 
 #get tips for a specific category
 def get_tips_for_category(category_id):
-    response = requests.get(f"{base_url}/categories/{category_id}/tips")
-    return response.json()
+    url = f"{base_url}/categories/{category_id}/tips"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  #HTTPError for bad responses (4xx, 5xx)
+
+        #if the response is empty before attempting to parse it as JSON
+        if not response.text.strip():  #the response body is empty
+            print(f"Empty response from API for category {category_id}.")
+            return []
+
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"API request failed: {e}")
+        return []
+    except requests.exceptions.JSONDecodeError as e:
+        print(f"Failed to decode JSON: {e}")
+        return []
+    
 
 
 class SettingsDialog(QtWidgets.QDialog):
@@ -514,23 +530,23 @@ class Ui_MainWindow(object):
             QtWidgets.QMessageBox.warning(self.centralwidget, "No File", "Please upload an image or video first.")
             return
 
-        #mapping for categories 
+        # mapping for categories
         label_to_category_id = {
-            "vase": 7,  
+            "vase": 2,  
             "bottle": 2,
             "battery": 2,         # Hazardous Materials
             "banana peel": 3,     # Organic Waste
             "laptop": 4,          # Electronic Waste
             "syringe": 5,         # Medical Waste
-            "sludge": 6           # Sludge
-            
+            "sludge": 6,           # Sludge
+            "motorcycle": 4
         }
 
         #model
         model = YOLO(self.settings['model_path'])
-        file_path = self.last_uploaded_file  #use last uploaded file path
+        file_path = self.last_uploaded_file  #set last uploaded file path
 
-        #inference with the model
+        #inference with yolo
         results = model(file_path)
 
         #get ids/scores
@@ -554,12 +570,14 @@ class Ui_MainWindow(object):
             
             if category_id:
                 category_ids.append(category_id)
-        
-        #for detected objects colect tips for category
+
+        #for detected objects, collect tips for category
         if category_ids:
             result_text += "\nTips:\n"
-            for category_id in set(category_ids):  # Avoid repeating categories
+            for category_id in set(category_ids):  #avoid repeating categories
                 tips = get_tips_for_category(category_id)
+                print(f"Tips for category {category_id}: {tips}")  #log the response for debugging
+                
                 if tips:
                     for tip in tips:
                         result_text += f"  📝 {tip['title']}: {tip['content']}\n"
@@ -570,7 +588,6 @@ class Ui_MainWindow(object):
 
         #display the result in box on UI
         QtWidgets.QMessageBox.information(self.centralwidget, "Detection Results", result_text)
-
 
 if __name__ == "__main__": 
     import sys
