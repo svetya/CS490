@@ -478,16 +478,15 @@ class Ui_MainWindow(object):
             None, "Open File", "", file_filter, options=options
         )
 
+        if not file_path:
+            return
+
         self.last_uploaded_file = file_path  # Save last uploaded file path
 
         if self.isVideo(file_path):
             self.displayVideo(file_path)
         else:
             self.displayImage(file_path)
-
-        #if not file_path:
-        #    QtWidgets.QMessageBox.warning(self.centralwidget, "No File Selected", "No file was selected.")
-        #    return
 
 
     def isVideo(self, file_path):
@@ -552,10 +551,26 @@ class Ui_MainWindow(object):
 
         # mapping for categories
         label_to_category_id = {
-            "vase": 2,  
+            "paper": 1,         #1. Paper Material
+            "poster": 1,
+            "cardboard": 1,
+
+            "vase": 2,          #2. Plastic Material
             "bottle": 2,
-            "battery": 2,         # Hazardous Materials
-            "banana peel": 3,     # Organic Waste
+            "plastic bag": 2,
+
+            "glass": 3,         #3. Glass Material
+            "glass bottle": 3,
+
+            "can": 4,           #4. Metal Material
+            "tin": 4,
+
+            "battery": 5,         #5. Hazardous Material
+            "laptop": 5,
+            "phone": 5,
+
+            "banana peel": 6,     #6. Organic Waste
+
             "laptop": 4,          # Electronic Waste
             "syringe": 5,         # Medical Waste
             "sludge": 6,           # Sludge
