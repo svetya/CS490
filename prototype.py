@@ -10,11 +10,14 @@ import uuid
 import requests
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QLineEdit, QCheckBox, QSpinBox, QPushButton, QHBoxLayout, QDialog, QFormLayout
+from PyQt5.QtGui import QMovie
+from PyQt5.QtCore import QSize
 
 # Load the model
 yolo = YOLO('yolov8n.pt')
 # Bootstrap Local API
 base_url = "http://localhost:5000/wastemanagementapi"
+
 
 def getColours(cls_num):
     base_colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
@@ -73,13 +76,14 @@ def get_guidelines_for_category(category_id):
 
 class SettingsDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
+
         super().__init__(parent)
         self.setWindowTitle("Settings")
         self.resize(400, 300)
-        
+
         # Set the background color to match the main application
         palette = QtGui.QPalette()
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
@@ -217,6 +221,25 @@ class CameraThread(QtCore.QThread):
 
 
 class Ui_MainWindow(object):
+
+    def update_frame(self, frame):
+        if self.movie.state() == QMovie.Running:
+            self.movie.stop()
+            self.ImageFeedLabel.clear()  # Clears the GIF from the label
+
+    # Convert to RGB and display in label
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        h, w, ch = frame_rgb.shape
+        bytes_per_line = ch * w
+        q_img = QtGui.QImage(frame_rgb.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        pixmap = QtGui.QPixmap.fromImage(q_img)
+
+        self.ImageFeedLabel.setPixmap(pixmap.scaled(
+            self.ImageFeedLabel.width(),
+            self.ImageFeedLabel.height(),
+            QtCore.Qt.KeepAspectRatio
+        ))
+
     #class for video thread
     class VideoThread(QThread):
         change_pixmap_signal = pyqtSignal(QtGui.QImage)
@@ -259,15 +282,15 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
-        
+
         palette = QtGui.QPalette()
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
         brush = QtGui.QBrush(QtGui.QColor(0, 62, 146))
@@ -279,13 +302,13 @@ class Ui_MainWindow(object):
         brush = QtGui.QBrush(QtGui.QColor(216, 255, 232, 128))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.PlaceholderText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
         brush = QtGui.QBrush(QtGui.QColor(0, 62, 146))
@@ -297,13 +320,13 @@ class Ui_MainWindow(object):
         brush = QtGui.QBrush(QtGui.QColor(216, 255, 232, 128))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.PlaceholderText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Window, brush)
         brush = QtGui.QBrush(QtGui.QColor(0, 62, 146))
@@ -316,6 +339,7 @@ class Ui_MainWindow(object):
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.PlaceholderText, brush)
         MainWindow.setPalette(palette)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
@@ -340,13 +364,10 @@ class Ui_MainWindow(object):
         self.LiveFeedButton = QtWidgets.QPushButton(self.centralwidget)
         self.LiveFeedButton.setObjectName("LiveFeedButton")
         self.LiveFeedButton.clicked.connect(self.start_camera)
-
         self.horizontalLayout.addWidget(self.LiveFeedButton)
-
         self.UploadButton = QtWidgets.QPushButton(self.centralwidget)
         self.UploadButton.setObjectName("UploadButton")
         self.UploadButton.clicked.connect(self.openFileDialog)
-        
         self.horizontalLayout.addWidget(self.UploadButton)
         self.gridLayout.addLayout(self.horizontalLayout, 2, 2, 1, 1)
         spacerItem1 = QtWidgets.QSpacerItem(128, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
@@ -395,11 +416,25 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.SettingsButton.setText(_translate("MainWindow", "Settings"))
         self.ScanButton.setText(_translate("MainWindow", "Scan"))
-        self.ImageFeedLabel.setText(_translate("MainWindow", "TextLabel"))
+        #self.ImageFeedLabel.setText(_translate("MainWindow", "TextLabel"))
         self.LiveFeedButton.setText(_translate("MainWindow", "Live Feed"))
         self.UploadButton.setText(_translate("MainWindow", "Upload"))
         self.TitleLabel.setText(_translate("MainWindow", "SmartBin"))
+       
+     ##GIF
+        self.ImageFeedLabel = QtWidgets.QLabel(self.centralwidget)
+        self.ImageFeedLabel.setObjectName("ImageFeedLabel")
+        self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
         
+        self.movie = QMovie("resources/painting.gif")
+        #self.movie = QMovie("/Users/svetyak/Documents/SmartBin2025/SBa18/CS490/resources/painting.gif")
+        #self.movie.setScaledSize(QSize(300, 300))  # Optional resize
+        self.gridLayout.addWidget(self.ImageFeedLabel, 1, 1, 1, 3)
+
+        self.ImageFeedLabel.setMovie(self.movie)
+        self.movie.start()
+    
+    
     def show_settings_dialog(self):
         """Open the settings dialog when settings button is clicked"""
         dialog = SettingsDialog(self.MainWindow)
@@ -479,7 +514,7 @@ class Ui_MainWindow(object):
         )
 
         if not file_path:
-            return
+             return
 
         self.last_uploaded_file = file_path  # Save last uploaded file path
 
@@ -487,6 +522,10 @@ class Ui_MainWindow(object):
             self.displayVideo(file_path)
         else:
             self.displayImage(file_path)
+
+        #if not file_path:
+        #    QtWidgets.QMessageBox.warning(self.centralwidget, "No File Selected", "No file was selected.")
+        #    return
 
 
     def isVideo(self, file_path):
@@ -551,30 +590,32 @@ class Ui_MainWindow(object):
 
         # mapping for categories
         label_to_category_id = {
-            "paper": 1,         #1. Paper Material
-            "poster": 1,
-            "cardboard": 1,
-
-            "vase": 2,          #2. Plastic Material
-            "bottle": 2,
-            "plastic bag": 2,
-
-            "glass": 3,         #3. Glass Material
-            "glass bottle": 3,
-
-            "can": 4,           #4. Metal Material
-            "tin": 4,
-
-            "battery": 5,         #5. Hazardous Material
-            "laptop": 5,
-            "phone": 5,
-
-            "banana peel": 6,     #6. Organic Waste
-
-            "laptop": 4,          # Electronic Waste
-            "syringe": 5,         # Medical Waste
-            "sludge": 6,           # Sludge
-            "motorcycle": 4
+             "vase": 2,  
+             "paper": 1,         #1. Paper Material
+             "poster": 1,
+             "cardboard": 1,
+ 
+             "vase": 2,          #2. Plastic Material
+             "bottle": 2,
+             "battery": 2,         # Hazardous Materials
+             "banana peel": 3,     # Organic Waste
+             "plastic bag": 2,
+ 
+             "glass": 3,         #3. Glass Material
+             "glass bottle": 3,
+ 
+             "can": 4,           #4. Metal Material
+             "tin": 4,
+ 
+             "battery": 5,         #5. Hazardous Material
+             "laptop": 5,
+             "phone": 5,
+ 
+             "banana peel": 6,     #6. Organic Waste
+ 
+             "laptop": 4,          # Electronic Waste
+             "syringe": 5,         # Medical Waste
+             "sludge": 6,           # Sludge
         }
 
         #model
