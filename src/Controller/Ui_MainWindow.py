@@ -294,23 +294,22 @@ class Ui_MainWindow(object):
         """Update QLabel with new frame"""
         self.ImageFeedLabel.setPixmap(QtGui.QPixmap.fromImage(qt_img))
 
-    def displayImage(self, file_path, model_path="newest 15.pt"):
-    """Display the selected image in the QLabel."""
-    model = YOLO(model_path)
-    results = model(file_path)
-    annotatedFrame = results[0].plot()
-    # 🔵 Fix color: Convert BGR to RGB before QImage
-    annotatedFrame = cv2.cvtColor(annotatedFrame, cv2.COLOR_BGR2RGB)
-    h, w, ch = annotatedFrame.shape
-    bytes_per_line = ch * w
-    q_image = QtGui.QImage(annotatedFrame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
-    pixmap = QtGui.QPixmap(q_image)
-    if pixmap.isNull():
-        QtWidgets.QMessageBox.critical(self, "Image Load Error", "Could not load image!")
-        return
-    pixmap = pixmap.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
-    self.ImageFeedLabel.setPixmap(pixmap)
-    self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
+    def displayImage(self, file_path, model_path="newest 20.pt"):
+        model = YOLO(model_path)
+        results = model(file_path)
+        annotatedFrame = results[0].plot()
+        # 🔵 Fix color: Convert BGR to RGB before QImage
+        annotatedFrame = cv2.cvtColor(annotatedFrame, cv2.COLOR_BGR2RGB)
+        h, w, ch = annotatedFrame.shape
+        bytes_per_line = ch * w
+        q_image = QtGui.QImage(annotatedFrame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
+        pixmap = QtGui.QPixmap(q_image)
+        if pixmap.isNull():
+            QtWidgets.QMessageBox.critical(self, "Image Load Error", "Could not load image!")
+            return
+        pixmap = pixmap.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
+        self.ImageFeedLabel.setPixmap(pixmap)
+        self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
     def convertFrametoQPixmap(self, frame):
         h, w, ch = frame.shape
         bytes_per_line = ch * w 
