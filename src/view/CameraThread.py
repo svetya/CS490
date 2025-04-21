@@ -9,7 +9,7 @@ import time
 class CameraThread(QtCore.QThread):
     change_pixmap_signal = QtCore.pyqtSignal(QtGui.QImage)
 
-    def __init__(self, camera_index=0, model_path="newest 20.pt", confidence=0.75, classes=None):
+    def __init__(self, camera_index=0, model_path="CurtisNet.pt", confidence=0.75, classes=None):
         super().__init__()
         self.camera_index = camera_index
         self.running = False
