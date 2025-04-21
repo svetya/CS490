@@ -184,7 +184,9 @@ class SettingsDialog(QtWidgets.QDialog):
 
 
 class CameraThread(QtCore.QThread):
-    change_pixmap_signal = QtCore.pyqtSignal(QtGui.QImage)
+    #change_pixmap_signal = QtCore.pyqtSignal(QtGui.QImage)
+    change_pixmap_signal = QtCore.pyqtSignal(QtGui.QImage, object)
+
 
     def __init__(self, camera_index=0, model_path="yolov8n.pt", confidence=0.5, classes=None):
         super().__init__()
@@ -210,7 +212,9 @@ class CameraThread(QtCore.QThread):
                 h, w, ch = frame.shape
                 bytes_per_line = ch * w
                 qt_img = QtGui.QImage(frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
-                self.change_pixmap_signal.emit(qt_img)
+                #self.change_pixmap_signal.emit(qt_img)
+                self.change_pixmap_signal.emit(qt_img, frame)
+
             QtCore.QThread.msleep(30)
 
     def stop(self):
@@ -242,7 +246,9 @@ class Ui_MainWindow(object):
 
     #class for video thread
     class VideoThread(QThread):
-        change_pixmap_signal = pyqtSignal(QtGui.QImage)
+        #change_pixmap_signal = pyqtSignal(QtGui.QImage)
+        change_pixmap_signal = pyqtSignal(QtGui.QImage, object)
+
 
         def __init__(self, file_path, model_path='yolov8n.pt'):
             super().__init__()
@@ -269,7 +275,8 @@ class Ui_MainWindow(object):
                 q_image = QtGui.QImage(annotated_frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
 
                 #send signal here
-                self.change_pixmap_signal.emit(q_image)
+                #self.change_pixmap_signal.emit(q_image)
+                self.change_pixmap_signal.emit(q_image, frame)
 
                 self.msleep(30)  #30fps
 
@@ -498,10 +505,13 @@ class Ui_MainWindow(object):
         self.video_thread.change_pixmap_signal.connect(self.update_image)
         self.video_thread.start()
 
-    def update_image(self, qt_img):
+    def update_image(self, qt_img, raw_frame):
         """Update QLabel with new frame"""
         pixmap = QtGui.QPixmap.fromImage(qt_img)  #convert
         self.ImageFeedLabel.setPixmap(pixmap)
+
+        if raw_frame is not None:
+            self.latest_frame = raw_frame  # Store the current frame
 
     def openFileDialog(self, model_path='yolov8n.pt'):
         """Open a file dialog to select an image and display it."""
@@ -584,46 +594,56 @@ class Ui_MainWindow(object):
     
     def scan_dialog(self):
         """Handle scan button click event."""
-        if not hasattr(self, 'last_uploaded_file') or self.last_uploaded_file is None:
-            QtWidgets.QMessageBox.warning(self.centralwidget, "No File", "Please upload an image or video first.")
+        if not hasattr(self, 'last_uploaded_file') and not hasattr(self, 'latest_frame'):
+            QtWidgets.QMessageBox.warning(self.centralwidget, "No Input", "Please upload an image/video or start the camera first.")
             return
 
+        model = YOLO(self.settings['model_path'])
+
+        # Decide what to scan: frame or image file
+        frame_to_scan = None
+        if hasattr(self, 'latest_frame') and self.latest_frame is not None:
+            frame_to_scan = self.latest_frame
+        elif self.last_uploaded_file:
+            frame_to_scan = self.last_uploaded_file
+        else:
+            QtWidgets.QMessageBox.warning(self.centralwidget, "No Frame", "No valid image or video frame to scan.")
+            return
+
+        results = model(frame_to_scan)
         # mapping for categories
         label_to_category_id = {
-             "vase": 2,  
-             "paper": 1,         #1. Paper Material
-             "poster": 1,
-             "cardboard": 1,
- 
-             "vase": 2,          #2. Plastic Material
-             "bottle": 2,
-             "battery": 2,         # Hazardous Materials
-             "banana peel": 3,     # Organic Waste
-             "plastic bag": 2,
- 
-             "glass": 3,         #3. Glass Material
-             "glass bottle": 3,
- 
-             "can": 4,           #4. Metal Material
-             "tin": 4,
- 
-             "battery": 5,         #5. Hazardous Material
-             "laptop": 5,
-             "phone": 5,
- 
-             "banana peel": 6,     #6. Organic Waste
- 
-             "laptop": 4,          # Electronic Waste
-             "syringe": 5,         # Medical Waste
-             "sludge": 6,           # Sludge
+            "paper": 1,         #1. Paper Material
+            "poster": 1,
+            "cardboard": 1,
+
+            "vase": 2,          #2. Plastic Material
+            "bottle": 2,
+            "plastic bag": 2,
+
+            "glass": 3,         #3. Glass Material
+            "glass bottle": 3,
+
+            "can": 4,           #4. Metal Material
+            "tin": 4,
+
+            "battery": 5,         #5. Hazardous Material
+            "phone": 5,
+
+            "banana peel": 6,     #6. Organic Waste
+
+            "laptop": 4,          # Electronic Waste
+            "syringe": 5,         # Medical Waste
+            "sludge": 6,           # Sludge
+            "motorcycle": 4
         }
 
         #model
-        model = YOLO(self.settings['model_path'])
-        file_path = self.last_uploaded_file  #set last uploaded file path
+        #model = YOLO(self.settings['model_path'])
+        #file_path = self.last_uploaded_file  #set last uploaded file path
 
         #inference with yolo
-        results = model(file_path)
+        #results = model(file_path)
 
         #get ids/scores
         boxes = results[0].boxes  
@@ -650,7 +670,7 @@ class Ui_MainWindow(object):
         #for detected objects, collect tips for category
         #also collect guidelines
         if category_ids:
-            result_text += "\nTips:\n"
+            result_text += "\nSmart Tips:\n"
             for category_id in set(category_ids):  #avoid repeating categories
                 tips = get_tips_for_category(category_id)
                 print(f"Tips for category {category_id}: {tips}")  #log the response for debugging
@@ -660,7 +680,7 @@ class Ui_MainWindow(object):
                         result_text += f"  📝 {tip['title']}: {tip['content']}\n"
                 else:
                     result_text += f"  No tips available for category {category_id}.\n"
-            result_text += "\nGuidelines:\n"
+            result_text += "\nSmart Guidelines:\n"
             for category_id in set(category_ids):  #avoid repeating categories
                 guidelines = get_guidelines_for_category(category_id)
                 print(f"Guidelines for category {category_id}: {guidelines}")  #log the response for debugging
@@ -675,6 +695,7 @@ class Ui_MainWindow(object):
 
         #display the result in box on UI
         QtWidgets.QMessageBox.information(self.centralwidget, "Detection Results", result_text)
+
 
 if __name__ == "__main__": 
     import sys
