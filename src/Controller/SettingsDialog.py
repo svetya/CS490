@@ -1,15 +1,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
 class SettingsDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
+
         super().__init__(parent)
         self.setWindowTitle("Settings")
         self.resize(400, 300)
-        
+
         # Set the background color to match the main application
         palette = QtGui.QPalette()
-        brush = QtGui.QBrush(QtGui.QColor(216, 255, 232))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
@@ -72,7 +72,7 @@ class SettingsDialog(QtWidgets.QDialog):
         # Model selection
         self.model_label = QtWidgets.QLabel("YOLO Model:")
         self.model_combo = QtWidgets.QComboBox()
-        self.model_combo.addItems(["CurtisNet.pt", "yolov8n.pt", "yolov5nu.pt"])
+        self.model_combo.addItems(["CurtisNet.pt","yolov8n.pt", "yolov5nu.pt"])
         self.form_layout.addRow(self.model_label, self.model_combo)
         
         # Classes to detect
@@ -80,7 +80,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.classes_layout = QtWidgets.QVBoxLayout()
         
         # Add some common recyclable items as checkboxes
-        common_classes = ["Plastic", "Paper", "Glass", "Metal", "Cardboard"]
+        common_classes = ["Plastic", "Paper", "Glass", "Metal", "Cardboard", "Organic"]
         self.class_checkboxes = {}
         
         for cls in common_classes:
@@ -107,4 +107,3 @@ class SettingsDialog(QtWidgets.QDialog):
         # Connect buttons
         self.save_button.clicked.connect(self.accept)
         self.cancel_button.clicked.connect(self.reject)
-
