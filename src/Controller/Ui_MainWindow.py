@@ -383,11 +383,13 @@ class Ui_MainWindow(object):
        """Update QLabel with new frame"""
        self.ImageFeedLabel.setPixmap(QtGui.QPixmap.fromImage(qt_img))
 
+
     def displayImage(self, file_path):
         """Display the selected image in the QLabel."""
         model = YOLO(self.settings['model_path'])
         results = model(file_path,conf=self.settings['confidence'], classes=self.settings['classes'])
         annotatedFrame = results[0].plot()
+
         annotatedFrame = cv2.cvtColor(annotatedFrame, cv2.COLOR_BGR2RGB)
         h, w, ch = annotatedFrame.shape
         bytes_per_line = ch * w
@@ -399,7 +401,6 @@ class Ui_MainWindow(object):
         pixmap = pixmap.scaled(640, 480, QtCore.Qt.KeepAspectRatio)
         self.ImageFeedLabel.setPixmap(pixmap)
         self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
-        
     def convertFrametoQPixmap(self, frame):
         h, w, ch = frame.shape
         bytes_per_line = ch * w 
