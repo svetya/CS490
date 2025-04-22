@@ -62,8 +62,8 @@ class Detector:
             label = self.model.names[cls_id]
             color = (0, 255, 0)
             cv2.rectangle(annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
-            cv2.putText(annotated_frame, f"{label} {score:.2f}", (int(x1), int(y1) - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            #cv2.putText(annotated_frame, f"{label} {score:.2f}", (int(x1), int(y1) - 10),
+                        #cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
         
         cv2.putText(annotated_frame, fps_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
         cv2.putText(annotated_frame, entity_text, (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
