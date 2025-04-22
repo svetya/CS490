@@ -7,7 +7,7 @@ class VideoThread(QtCore.QThread):
         change_pixmap_signal = pyqtSignal(QtGui.QImage, object)
 
 
-        def __init__(self, file_path, model_path='yolov8n.pt', confidence=0.5, classes=None):
+        def __init__(self, file_path, model_path='CurtisNet.pt', confidence=0.5, classes=None):
             super().__init__()
             self.file_path = file_path
             self.model_path = model_path

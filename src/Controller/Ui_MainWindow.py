@@ -3,10 +3,9 @@ from PyQt5.QtWidgets import QFileDialog
 import cv2
 from ultralytics import YOLO
 import os
-from View.CameraThread import CameraThread
-from View.VideoThread import VideoThread
+from view.CameraThread import CameraThread
+from view.VideoThread import VideoThread
 from Controller.SettingsDialog import SettingsDialog
-import uuid
 import requests
 
 from PyQt5.QtGui import QMovie
@@ -445,7 +444,7 @@ class Ui_MainWindow(object):
             "paper straw": 1,
             
             # 2. Plastic Material
-            "aluminium blister pack": 2,  # Often multi-material, but mostly plastic
+            "aluminium blister pack": 2,  
             "carded blister pack": 2,
             "other plastic bottle": 2,
             "clear plastic bottle": 2,
