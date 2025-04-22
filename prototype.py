@@ -13,8 +13,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLa
 from PyQt5.QtGui import QMovie
 from PyQt5.QtCore import QSize
 
-# Load the model
-yolo = YOLO('yolov8n.pt')
+
 # Bootstrap Local API
 base_url = "http://localhost:5000/wastemanagementapi"
 
@@ -410,7 +409,7 @@ class Ui_MainWindow(object):
         # Default settings
         self.settings = {
             'camera_index': 0,
-            'model_path': 'yolov8n.pt',
+            'model_path': 'CurtisNet.pt',
             'confidence': 0.5,
             'classes': None
         }
@@ -505,13 +504,13 @@ class Ui_MainWindow(object):
         self.video_thread.change_pixmap_signal.connect(self.update_image)
         self.video_thread.start()
 
-    def update_image(self, qt_img, raw_frame):
-        """Update QLabel with new frame"""
-        pixmap = QtGui.QPixmap.fromImage(qt_img)  #convert
-        self.ImageFeedLabel.setPixmap(pixmap)
+    # def update_image(self, qt_img, raw_frame):
+    #     """Update QLabel with new frame"""
+    #     pixmap = QtGui.QPixmap.fromImage(qt_img)  #convert
+    #     self.ImageFeedLabel.setPixmap(pixmap)
 
-        if raw_frame is not None:
-            self.latest_frame = raw_frame  # Store the current frame
+    #     if raw_frame is not None:
+    #         self.latest_frame = raw_frame  # Store the current frame
 
     def openFileDialog(self, model_path='yolov8n.pt'):
         """Open a file dialog to select an image and display it."""
