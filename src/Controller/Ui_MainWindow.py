@@ -429,73 +429,73 @@ class Ui_MainWindow(object):
         # mapping for categories
         label_to_category_id = {
             # 1. Paper Material
-            "Toilet tube": 1,
-            "Other carton": 1,
-            "Egg carton": 1,
-            "Drink carton": 1,
-            "Corrugated carton": 1,
-            "Meal carton": 1,
-            "Pizza box": 1,
-            "Paper cup": 1,
-            "Magazine paper": 1,
-            "Tissues": 1,
-            "Wrapping paper": 1,
-            "Normal paper": 1,
-            "Paper bag": 1,
-             "Paper straw": 1,
+            "toilet tube": 1,
+            "other carton": 1,
+            "egg carton": 1,
+            "drink carton": 1,
+            "corrugated carton": 1,
+            "meal carton": 1,
+            "pizza box": 1,
+            "paper cup": 1,
+            "magazine paper": 1,
+            "tissues": 1,
+            "wrapping paper": 1,
+            "normal paper": 1,
+            "paper bag": 1,
+            "paper straw": 1,
             
             # 2. Plastic Material
-            "Aluminium blister pack": 2,  # Often multi-material, but mostly plastic
-            "Carded blister pack": 2,
-            "Other plastic bottle": 2,
-            "Clear plastic bottle": 2,
-            "Plastic bottle cap": 2,
-            "Disposable plastic cup": 2,
-            "Other plastic cup": 2,
-            "Plastic lid": 2,
-            "Other plastic": 2,
-            "Plastified paper bag": 2,
-            "Plastic film": 2,
-            "Six pack rings": 2,
-            "Garbage bag": 2,
-            "Other plastic wrapper": 2,
-            "Single-use carrier bag": 2,
-            "Polypropylene bag": 2,
-            "Crisp packet": 2,
-            "Spread tub": 2,
-            "Tupperware": 2,
-            "Disposable food container": 2,
-            "Foam food container": 2,
-            "Other plastic container": 2,
-            "Plastic glooves": 2,
-            "Plastic utensils": 2,
-            "Squeezable tube": 2,
-            "Plastic straw": 2,
-            "Styrofoam piece": 2,
+            "aluminium blister pack": 2,  # Often multi-material, but mostly plastic
+            "carded blister pack": 2,
+            "other plastic bottle": 2,
+            "clear plastic bottle": 2,
+            "plastic bottle cap": 2,
+            "disposable plastic cup": 2,
+            "other plastic cup": 2,
+            "plastic lid": 2,
+            "other plastic": 2,
+            "plastified paper bag": 2,
+            "plastic film": 2,
+            "six pack rings": 2,
+            "garbage bag": 2,
+            "other plastic wrapper": 2,
+            "single-use carrier bag": 2,
+            "polypropylene bag": 2,
+            "crisp packet": 2,
+            "spread tub": 2,
+            "tupperware": 2,
+            "disposable food container": 2,
+            "foam food container": 2,
+            "other plastic container": 2,
+            "plastic glooves": 2,
+            "plastic utensils": 2,
+            "squeezable tube": 2,
+            "plastic straw": 2,
+            "styrofoam piece": 2,
 
             # 3. Glass Material
-            "Glass bottle": 3,
-            "Broken glass": 3,
-            "Glass cup": 3,
-            "Glass jar": 3,
+            "glass bottle": 3,
+            "broken glass": 3,
+            "glass cup": 3,
+            "glass jar": 3,
 
             # 4. Metal Material
-            "Aluminium foil": 4,
-            "Metal bottle cap": 4,
-            "Food Can": 4,
-            "Aerosol": 4,
-            "Drink can": 4,
-            "Metal lid": 4,
-            "Pop tab": 4,
-            "Scrap metal": 4,
+            "aluminium foil": 4,
+            "metal bottle cap": 4,
+            "food Can": 4,
+            "aerosol": 4,
+            "drink can": 4,
+            "metal lid": 4,
+            "pop tab": 4,
+            "scrap metal": 4,
 
             # 5. Hazardous Material
-            "Battery": 5,
-            "Cigarette": 5,
-            "Unlabeled litter": 5,
+            "battery": 5,
+            "cigarette": 5,
+            "unlabeled litter": 5,
 
             # 6. Organic Waste
-            "Food waste": 6,
+            "food waste": 6,
 
             # 7. Electronic Waste
 
@@ -504,8 +504,8 @@ class Ui_MainWindow(object):
             # 9. Sludge
            
             # 10. Textile
-            "Shoe": 10,
-            "Rope & strings": 10
+            "shoe": 10,
+            "rope & strings": 10
         }
 
         #model
