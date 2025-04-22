@@ -40,4 +40,3 @@ class Detector:
         frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
 
         return frame 
-
