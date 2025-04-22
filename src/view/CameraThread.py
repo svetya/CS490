@@ -1,6 +1,8 @@
 from PyQt5 import QtCore, QtGui
 import cv2
 from Model.detector import Detector
+import numpy as np
+from ultralytics import YOLO
 
 class CameraThread(QtCore.QThread):
     change_pixmap_signal = QtCore.pyqtSignal(QtGui.QImage)
@@ -19,7 +21,6 @@ class CameraThread(QtCore.QThread):
     def run(self):
         self.cap = cv2.VideoCapture(self.camera_index)
         self.running = True
-
 
         while self.running:
             ret, frame = self.cap.read()

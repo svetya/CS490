@@ -1,7 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-
-
 class SettingsDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
 

@@ -428,29 +428,84 @@ class Ui_MainWindow(object):
         results = model(frame_to_scan)
         # mapping for categories
         label_to_category_id = {
-            "paper": 1,         #1. Paper Material
-            "poster": 1,
-            "cardboard": 1,
+            # 1. Paper Material
+            "Toilet tube": 1,
+            "Other carton": 1,
+            "Egg carton": 1,
+            "Drink carton": 1,
+            "Corrugated carton": 1,
+            "Meal carton": 1,
+            "Pizza box": 1,
+            "Paper cup": 1,
+            "Magazine paper": 1,
+            "Tissues": 1,
+            "Wrapping paper": 1,
+            "Normal paper": 1,
+            "Paper bag": 1,
+             "Paper straw": 1,
+            
+            # 2. Plastic Material
+            "Aluminium blister pack": 2,  # Often multi-material, but mostly plastic
+            "Carded blister pack": 2,
+            "Other plastic bottle": 2,
+            "Clear plastic bottle": 2,
+            "Plastic bottle cap": 2,
+            "Disposable plastic cup": 2,
+            "Other plastic cup": 2,
+            "Plastic lid": 2,
+            "Other plastic": 2,
+            "Plastified paper bag": 2,
+            "Plastic film": 2,
+            "Six pack rings": 2,
+            "Garbage bag": 2,
+            "Other plastic wrapper": 2,
+            "Single-use carrier bag": 2,
+            "Polypropylene bag": 2,
+            "Crisp packet": 2,
+            "Spread tub": 2,
+            "Tupperware": 2,
+            "Disposable food container": 2,
+            "Foam food container": 2,
+            "Other plastic container": 2,
+            "Plastic glooves": 2,
+            "Plastic utensils": 2,
+            "Squeezable tube": 2,
+            "Plastic straw": 2,
+            "Styrofoam piece": 2,
 
-            "vase": 2,          #2. Plastic Material
-            "bottle": 2,
-            "plastic bag": 2,
+            # 3. Glass Material
+            "Glass bottle": 3,
+            "Broken glass": 3,
+            "Glass cup": 3,
+            "Glass jar": 3,
 
-            "glass": 3,         #3. Glass Material
-            "glass bottle": 3,
+            # 4. Metal Material
+            "Aluminium foil": 4,
+            "Metal bottle cap": 4,
+            "Food Can": 4,
+            "Aerosol": 4,
+            "Drink can": 4,
+            "Metal lid": 4,
+            "Pop tab": 4,
+            "Scrap metal": 4,
 
-            "can": 4,           #4. Metal Material
-            "tin": 4,
+            # 5. Hazardous Material
+            "Battery": 5,
+            "Cigarette": 5,
+            "Unlabeled litter": 5,
 
-            "battery": 5,         #5. Hazardous Material
-            "phone": 5,
+            # 6. Organic Waste
+            "Food waste": 6,
 
-            "banana peel": 6,     #6. Organic Waste
+            # 7. Electronic Waste
 
-            "laptop": 4,          # Electronic Waste
-            "syringe": 5,         # Medical Waste
-            "sludge": 6,           # Sludge
-            "motorcycle": 4
+            # 8. Medical Waste
+
+            # 9. Sludge
+           
+            # 10. Textile
+            "Shoe": 10,
+            "Rope & strings": 10
         }
 
         #model
