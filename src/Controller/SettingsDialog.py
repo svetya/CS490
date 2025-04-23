@@ -9,7 +9,7 @@ class SettingsDialog(QtWidgets.QDialog):
 
         # Set the background color to match the main application
         palette = QtGui.QPalette()
-        brush = QtGui.QBrush(QtGui.QColor(62, 155, 155))
+        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
