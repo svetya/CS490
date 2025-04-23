@@ -17,7 +17,6 @@ class CameraThread(QtCore.QThread):
         self.model = Detector(model_path, confidence)
         self.confidence = confidence
         self.classes = classes  # None means detect all classes
-        self.last_frame = None  
 
     def run(self):
         self.cap = cv2.VideoCapture(self.camera_index)
@@ -26,15 +25,7 @@ class CameraThread(QtCore.QThread):
         while self.running:
             ret, frame = self.cap.read()
             if ret:
-                self.last_frame = frame.copy()
-                #frame = self.model.detect(frame, self.confidence, self.classes)
-                
-                results = self.model.detect(frame, self.confidence, self.classes, stream=True)
-
-                
-                for result in results:
-                    frame = result.plot()
-
+                frame = self.model.detect(frame, self.confidence, self.classes)
                 h, w, ch = frame.shape
                 bytes_per_line = ch * w
                 qt_img = QtGui.QImage(frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
@@ -46,5 +37,3 @@ class CameraThread(QtCore.QThread):
         self.wait()
         if self.cap:
             self.cap.release()
-    def get_current_frame(self):
-        return self.last_frame.copy() if self.last_frame is not None else None
