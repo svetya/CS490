@@ -15,6 +15,7 @@ class VideoThread(QtCore.QThread):
             self.confidence= confidence
             self.classes=classes
             self._run_flag = True
+            self.last_frame = None
 
         def run(self):
             model = Detector(self.model_path, self.confidence)
@@ -25,8 +26,13 @@ class VideoThread(QtCore.QThread):
                 if not ret:
                     break
 
-                frame = model.detect(frame, self.confidence, self.classes)
-                
+                results = model.detect(frame, self.confidence, self.classes, stream = True)
+
+                for result in results:
+                    frame = result.plot()  # Annotate the original frame
+
+                    break
+                self.last_frame = frame.copy()
                 h, w, ch = frame.shape
                 bytes_per_line = ch * w
                 q_image = QtGui.QImage(frame.data, w, h, bytes_per_line, QtGui.QImage.Format_RGB888)
@@ -42,3 +48,6 @@ class VideoThread(QtCore.QThread):
         def stop(self):
             self._run_flag = False
             self.wait()
+
+        def get_current_frame(self):
+            return self.last_frame.copy() if self.last_frame is not None else None
