@@ -1,18 +1,29 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
-import cv2
-from ultralytics import YOLO
+import sys
 import os
+import uuid
+import random
+import requests
+import cv2
+import numpy as np
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize
+from PyQt5.QtGui import QMovie, QIcon, QPainter, QPen, QColor, QBrush
+from PyQt5.QtWidgets import (
+    QApplication, QMenuBar, QStatusBar, QStackedLayout, QSpacerItem, QSizePolicy,
+    QMainWindow, QFrame, QWidget, QVBoxLayout, QLabel, QLineEdit, QCheckBox,
+    QSpinBox, QPushButton, QHBoxLayout, QDialog, QFormLayout, QFileDialog
+)
+
+from ultralytics import YOLO
+
 from view.CameraThread import CameraThread
 from view.VideoThread import VideoThread
 from Controller.SettingsDialog import SettingsDialog
-import requests
 
-from PyQt5.QtGui import QMovie
 
 # Bootstrap Local API
 base_url = "http://localhost:5000/wastemanagementapi"
-
 
 def getColours(cls_num):
     base_colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
@@ -67,6 +78,13 @@ def get_guidelines_for_category(category_id):
         print(f"Failed to decode JSON: {e}")
         return []
     
+class MyWidget(QWidget):
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        pen = QPen(Qt.green)
+        pen.setWidth(10)
+        painter.setPen(pen)
+        painter.drawLine(50, 50, 200, 200)
 
 
 class Ui_MainWindow(object):
@@ -94,14 +112,15 @@ class Ui_MainWindow(object):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
 
+        # Palette (your palette setup code remains the same)
         palette = QtGui.QPalette()
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.Window, brush)
         brush = QtGui.QBrush(QtGui.QColor(0, 62, 146))
@@ -113,13 +132,13 @@ class Ui_MainWindow(object):
         brush = QtGui.QBrush(QtGui.QColor(216, 255, 232, 128))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Active, QtGui.QPalette.PlaceholderText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.Window, brush)
         brush = QtGui.QBrush(QtGui.QColor(0, 62, 146))
@@ -131,13 +150,13 @@ class Ui_MainWindow(object):
         brush = QtGui.QBrush(QtGui.QColor(216, 255, 232, 128))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Inactive, QtGui.QPalette.PlaceholderText, brush)
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Button, brush)
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Base, brush)
-        brush = QtGui.QBrush(QtGui.QColor(1, 111, 111))
+        brush = QtGui.QBrush(QtGui.QColor(18, 123, 123))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Window, brush)
         brush = QtGui.QBrush(QtGui.QColor(0, 62, 146))
@@ -149,63 +168,189 @@ class Ui_MainWindow(object):
         brush = QtGui.QBrush(QtGui.QColor(216, 255, 232, 128))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.PlaceholderText, brush)
+
         MainWindow.setPalette(palette)
 
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
-        self.gridLayout_2.setObjectName("gridLayout_2")
-        self.gridLayout = QtWidgets.QGridLayout()
-        self.gridLayout.setObjectName("gridLayout")
-        self.SettingsButton = QtWidgets.QPushButton(self.centralwidget)
-        self.SettingsButton.setObjectName("SettingsButton")
-        self.SettingsButton.clicked.connect(self.show_settings_dialog)  # Connect settings button
-        self.gridLayout.addWidget(self.SettingsButton, 0, 0, 1, 1)
-        self.ScanButton = QtWidgets.QPushButton(self.centralwidget)
-        self.ScanButton.setObjectName("ScanButton")
-        self.ScanButton.clicked.connect(self.scan_dialog)  # Connect scanning button
-        self.gridLayout.addWidget(self.ScanButton, 0, 4, 1, 1)
-        self.ImageFeedLabel = QtWidgets.QLabel(self.centralwidget)
-        self.ImageFeedLabel.setObjectName("ImageFeedLabel")
-        self.gridLayout.addWidget(self.ImageFeedLabel, 1, 1, 1, 3)
-        spacerItem = QtWidgets.QSpacerItem(118, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem, 2, 0, 1, 2)
+        # Central Widget & Layouts
         self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName(u"centralwidget")
+        
+        self.gridLayout_2 = QtWidgets.QGridLayout(self.centralwidget)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setObjectName(u"gridLayout")
+
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.gridLayout.addItem(self.verticalSpacer_3, 3, 2, 1, 1)
+        
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.gridLayout.addItem(self.verticalSpacer, 1, 2, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(118, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.gridLayout.addItem(self.horizontalSpacer, 5, 0, 1, 2)
+
+        self.horizontalSpacer_2 = QSpacerItem(128, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.gridLayout.addItem(self.horizontalSpacer_2, 5, 3, 1, 2)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.gridLayout.addItem(self.horizontalSpacer_3, 2, 0, 1, 1)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.gridLayout.addItem(self.horizontalSpacer_4, 2, 4, 1, 1)
+
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.gridLayout.addItem(self.horizontalSpacer_5, 0, 1, 1, 1)
+
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.gridLayout.addItem(self.horizontalSpacer_6, 0, 3, 1, 1)
+
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        # Image feed label (centered GIF)
+        self.ImageFeedLabel = QtWidgets.QLabel(self.centralwidget)
+        self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.movie = QMovie("resources/welcome.gif")
+        self.ImageFeedLabel.setMovie(self.movie)
+        self.movie.start()
+        
+        self.gridLayout.addWidget(self.ImageFeedLabel, 2, 1, 1, 3)
+
+       
+        # Gear GIF (QLabel with Movie)
+        self.gear_widget = QtWidgets.QLabel(self.centralwidget)
+        self.gear_widget.setAlignment(QtCore.Qt.AlignCenter)  # Align center
+        self.gear_movie = QMovie("resources/settings1.gif")
+        self.gear_widget.setMovie(self.gear_movie)
+        self.gear_movie.start()
+
+        # Add gear widget to your grid layout (adjust row/column as needed)
+        self.gridLayout.addWidget(self.gear_widget, 1, 0, 1, 1)  # Example: position it at row 0, column 0
+
+        # Transparent clickable Gear button
+        self.gear_button = QtWidgets.QPushButton(self.centralwidget)
+        self.gear_button.setStyleSheet("background-color: transparent; border: none;")
+        self.gear_button.setFixedSize(80, 80)  # Same size as the GIF
+        self.gear_button.clicked.connect(self.show_settings_dialog)
+
+        # Add gear button to the same grid layout (same position as the GIF)
+        self.gridLayout.addWidget(self.gear_button, 1, 0, 1, 1)
+
+        # Lightbulb GIF (QLabel with Movie)
+        self.lightbulb_widget = QtWidgets.QLabel(self.centralwidget)
+        self.lightbulb_widget.setAlignment(QtCore.Qt.AlignCenter)  # Align center
+        self.lightbulb_movie = QMovie("resources/lightbulb1.gif")
+        self.lightbulb_widget.setMovie(self.lightbulb_movie)
+        self.lightbulb_movie.start()
+
+        # Add lightbulb widget to your grid layout at the top-right corner
+        self.gridLayout.addWidget(self.lightbulb_widget, 1, 4, 1, 1)  # Position it at row 0, column 3 (right side)
+
+        # Transparent clickable Lightbulb button
+        self.lightbulb_button = QtWidgets.QPushButton(self.centralwidget)
+        self.lightbulb_button.setToolTip("Lightbulb Action")
+        self.lightbulb_button.setStyleSheet("background-color: transparent; border: none;")
+        self.lightbulb_button.setFixedSize(80, 80)  # Same size as the GIF
+        self.lightbulb_button.clicked.connect(self.scan_dialog)
+
+        # Add lightbulb button to the same grid layout (same position as the GIF)
+        self.gridLayout.addWidget(self.lightbulb_button, 1, 4, 1, 1)  # Ensure it overlays the GIF
+
+
+        #------Add Gear and Lightbulb to the Layout----------
+        #self.horizontalLayout.addWidget(self.gear_widget)
+        #self.horizontalLayout.addWidget(self.lightbulb_widget)
+
+        #------Live Feed Button Setup--------------------------
         self.LiveFeedButton = QtWidgets.QPushButton(self.centralwidget)
         self.LiveFeedButton.setObjectName("LiveFeedButton")
+        self.LiveFeedButton.setText("Live Feed")
         self.LiveFeedButton.clicked.connect(self.start_camera)
         self.horizontalLayout.addWidget(self.LiveFeedButton)
+
+        #------Upload Image Button Setup-----------------------
         self.UploadButton = QtWidgets.QPushButton(self.centralwidget)
         self.UploadButton.setObjectName("UploadButton")
+        self.UploadButton.setText("Upload Image or Videos")
         self.UploadButton.clicked.connect(self.openFileDialog)
         self.horizontalLayout.addWidget(self.UploadButton)
-        self.gridLayout.addLayout(self.horizontalLayout, 2, 2, 1, 1)
-        spacerItem1 = QtWidgets.QSpacerItem(128, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem1, 2, 3, 1, 2)
+
+        self.horizontalLayout.setAlignment(QtCore.Qt.AlignRight)  # Align to the right (or use AlignCenter for center)
+
+
+        #------Styling for the Buttons--------------------------
+        self.LiveFeedButton.setStyleSheet("""
+        QPushButton#LiveFeedButton {
+            font-size: 16px;
+            padding: 10px 20px;
+            background-color: #1558b2;
+            color:#FFFFFF;
+            border: 2px solid white;
+            border-radius: 8px;
+            box-shadow: 4px 4px 6px rgba(255, 255, 255, 0.3);
+        }
+        QPushButton#LiveFeedButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #99e8b2, stop:0.33 #75d894, stop:0.66 #43c26b, stop:1 #11a840);
+        }
+        QPushButton#LiveFeedButton:pressed {
+            padding-left: 12px;
+            padding-top: 12px;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        """)
+
+        # Same for the Upload Button
+        self.UploadButton.setStyleSheet("""
+        QPushButton#UploadButton {
+            font-size: 16px;
+            padding: 10px 20px;
+            background-color: #1558b2;
+            color:#FFFFFF;
+            border: 2px solid white;
+            border-radius: 8px;
+            box-shadow: 4px 4px 6px rgba(255, 255, 255, 0.3);
+        }
+        QPushButton#UploadButton:hover {
+            background-color: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #99e8b2, stop:0.33 #75d894, stop:0.66 #43c26b, stop:1 #11a840);
+        }
+        QPushButton#UploadButton:pressed {
+            padding-left: 12px;
+            padding-top: 12px;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        """)
+
+        #------Add Layout to Grid--------------------------
+        self.gridLayout.addLayout(self.horizontalLayout, 3, 2, 1, 1)
+        self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
+
+        #------Second Title Line (Above Title Label)------
+        self.SecondTitleLine = QtWidgets.QFrame(self.centralwidget)
+        self.SecondTitleLine.setFrameShape(QtWidgets.QFrame.HLine)  # Set the frame shape to horizontal line
+        self.SecondTitleLine.setFrameShadow(QtWidgets.QFrame.Sunken)  # Set the shadow to sunken
+        self.SecondTitleLine.setLineWidth(10)  # Set the line width
+        self.SecondTitleLine.setStyleSheet("color: white;")  # Set the color to white
+
+        # Add the second TitleLine to the grid layout above the TitleLabel (row 1, adjusted)
+        self.gridLayout.addWidget(self.SecondTitleLine, 4, 0, 1, 5)  # Span across all columns
+
+        #------Title Label (SmartBin)------
+        
         self.TitleLabel = QtWidgets.QLabel(self.centralwidget)
         font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(42)
+        font.setFamily("Helvetica")
+        font.setPointSize(60)
         self.TitleLabel.setFont(font)
         self.TitleLabel.setObjectName("TitleLabel")
-        self.gridLayout.addWidget(self.TitleLabel, 0, 2, 1, 1)
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem2, 1, 0, 1, 1)
-        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.gridLayout.addItem(spacerItem3, 1, 4, 1, 1)
-        self.gridLayout_2.addLayout(self.gridLayout, 0, 0, 1, 1)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 441, 22))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
+        self.TitleLabel.setText("SmartBin")  # Set the text for the title label
+        self.TitleLabel.setStyleSheet("color: white;") 
 
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        # Add the TitleLabel to the grid layout at row 2, column 2, and center it (adjusted)
+        self.gridLayout.addWidget(self.TitleLabel, 1, 2, 1, 1, QtCore.Qt.AlignCenter)
+
+        MainWindow.setCentralWidget(self.centralwidget)
+
+         #-----Camera thread and default settings-----
         self.camera_thread = None  # Thread for the camera
         
         # Store a reference to the MainWindow
@@ -214,7 +359,7 @@ class Ui_MainWindow(object):
         # Default settings
         self.settings = {
             'camera_index': 0,
-            'model_path': 'AI_Models\\CurtisNet.pt',
+            'model_path': 'yolov8n.pt',
             'confidence': 0.5,
             'classes': None
         }
@@ -224,28 +369,18 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
+         
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.SettingsButton.setText(_translate("MainWindow", "Settings"))
-        self.ScanButton.setText(_translate("MainWindow", "Scan"))
+        #self.SettingsButton.setText(_translate("MainWindow", "Settings"))
+        #self.SettingsButton.setText(_translate("MainWindow", "Settings"))
+        #self.ScanButton.setText(_translate("MainWindow", "Scan"))
         #self.ImageFeedLabel.setText(_translate("MainWindow", "TextLabel"))
         self.LiveFeedButton.setText(_translate("MainWindow", "Live Feed"))
-        self.UploadButton.setText(_translate("MainWindow", "Upload"))
+        self.UploadButton.setText(_translate("MainWindow", "Upload Image"))
         self.TitleLabel.setText(_translate("MainWindow", "SmartBin"))
-       
-     ##GIF
-        self.ImageFeedLabel = QtWidgets.QLabel(self.centralwidget)
-        self.ImageFeedLabel.setObjectName("ImageFeedLabel")
-        self.ImageFeedLabel.setAlignment(QtCore.Qt.AlignCenter)
-        
-        self.movie = QMovie("resources/painting.gif")
-        #self.movie = QMovie("/Users/svetyak/Documents/SmartBin2025/SBa18/CS490/resources/painting.gif")
-        #self.movie.setScaledSize(QSize(300, 300))  # Optional resize
-        self.gridLayout.addWidget(self.ImageFeedLabel, 1, 1, 1, 3)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+    
 
-        self.ImageFeedLabel.setMovie(self.movie)
-        self.movie.start()
-    
-    
     def show_settings_dialog(self):
         """Open the settings dialog when settings button is clicked"""
         dialog = SettingsDialog(self.MainWindow)
